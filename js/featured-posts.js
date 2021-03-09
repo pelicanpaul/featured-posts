@@ -11,7 +11,7 @@ jQuery(document).ready(function($) {
 
         var str = jQuery(this).text();
 
-        jQuery(this).text(truncString(str, 60, '...'));
+        //jQuery(this).text(truncString(str, 52, '...'));
     });
 
 

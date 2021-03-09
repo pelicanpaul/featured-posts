@@ -19,6 +19,8 @@ add_action('wp_enqueue_scripts', 'enqueue_files');
 
 function display_posts($atts){
 
+	$parent_id = get_the_ID();
+
 	$args = shortcode_atts(
 		array(
 			'type' => 'featured',
@@ -45,7 +47,8 @@ function display_posts($atts){
 
 			$args = array(
 				'numberposts' => $numberposts,
-				'order' => 'DESC'
+				'order' => 'DESC',
+				'exclude' => $parent_id
 			);
 
 			break;
@@ -75,36 +78,48 @@ function display_posts($atts){
 	}
 
 	$posts = get_posts($args);
-	$c = '';
+	$str = '';
 
-	$c = $c . '<div class="container-featured-posts">';
+	$str .=  '<div class="container-featured-posts">';
 	foreach ($posts as $p) :
 		$post_date =  new DateTime($p->post_date);
-		$post_date = $post_date->format('d F Y');
+		$post_date = $post_date->format('F j, Y');
 
-		$c = $c . '<article>';
-		$c = $c . '<a href="' . get_permalink($p->ID) . '">';
-		$c = $c . '<div class="container-article">';
+		$categories_post = wp_get_post_categories( $p->ID );
+		$cat_str = '';
 
-		$c = $c . '<div class="post-image" style="background-image: url(' . get_the_post_thumbnail_url( $p->ID, 'large' ) . ');">';
-		$c = $c . '<img class="img-mobile" src="' .  get_the_post_thumbnail_url( $p->ID, 'large' ) . '"  />';
-		$c = $c . '<div class="container-article-details">';
-		$c = $c . '<div class="post-title">' .$p->post_title  . '</div>';
-		$c = $c . '<div class="post-date">' . $post_date . '</div>';
-		$c = $c . '<div class="post-author">BY ' . get_the_author_meta('display_name') . '</div>';
-		$c = $c . '</div>';
 
-		$c = $c . '</div>';
+		foreach($categories_post as $c){
+			$cat = get_category( $c );
+			//get the name of the category
+			$cat_id = get_cat_ID( $cat->name );
+			if($cat_id !== 3){
+				$cat_str .= '<a href="'.get_category_link($cat_id).'">'.$cat->name.'</a>, ';
+			}
+		}
 
-		$c = $c . '</div>';
-		$c = $c . '</a>';
-		$c = $c . '</article>';
+		$cat_str = substr_replace($cat_str,"",-2);
+
+
+		$str .=   '<article class="blog-item">';
+		$str .=   '<div class="container-blog-item" style="background-image: url(' . get_the_post_thumbnail_url( $p->ID, 'thumbnail' ) . ');">';
+		$str .=   '<h2 class="blog-title"><a href="' . get_permalink($p->ID) . '">' .$p->post_title  . '</a>';
+		$str .=   '<a href="' . get_permalink($p->ID) . '" class="read-more">Read More</a>';
+		$str .=   '</h2>';
+		$str .=   '</div>';
+		$str .=   '<div class="container-meta">';
+		$str .=   '<ul class="blog-item-info blog-item-info-archive">';
+		$str .=   '<li><span class="blog-date">' . $post_date . '</span></li>';
+		$str .=   '<li class="clear-left"><span class="blog-categories">' . $cat_str . '</span></li>';
+		$str .=   '</ul>';
+		$str .=   '</div>';
+		$str .=   '</article>';
 
 	endforeach;
 
-	$c = $c . '</div>';
+	$str .=   '</div>';
 
-	return $c;
+	return $str;
 
 }
 add_shortcode('show_posts', 'display_posts');
